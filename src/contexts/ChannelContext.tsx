@@ -4,6 +4,7 @@ import { mockServers, mockCurrentUser } from '@/config/mockData';
 
 interface ChannelContextType {
   currentChannel: Channel | null;
+  channels: Channel[];
   unreadChannels: Set<string>;
   mentionCounts: Map<string, number>;
   setCurrentChannel: (channel: Channel) => void;
@@ -15,9 +16,10 @@ interface ChannelContextType {
 const ChannelContext = createContext<ChannelContextType | null>(null);
 
 export const ChannelProvider = ({ children }: { children: ReactNode }) => {
-  // Find the general channel from mock data
   const generalChannel = mockServers[0].channels.find(c => c.name === 'general');
   
+  // Update state to include all channels
+  const [channels, setChannels] = useState(mockServers[0].channels);
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(generalChannel || null);
   const [unreadChannels, setUnreadChannels] = useState<Set<string>>(
     new Set(mockServers[0].channels.filter(c => c.isUnread && c.id !== generalChannel?.id).map(c => c.id))
@@ -47,10 +49,29 @@ export const ChannelProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addMessage = (channelId: string, message: Message) => {
+    setChannels(prevChannels => {
+      const updatedChannels = prevChannels.map(channel => {
+        if (channel.id === channelId) {
+          return {
+            ...channel,
+            messages: [...channel.messages, message]
+          };
+        }
+        return channel;
+      });
+      
+      // Update currentChannel if the message is for the current channel
+      if (currentChannel?.id === channelId) {
+        const updatedCurrentChannel = updatedChannels.find(c => c.id === channelId);
+        setCurrentChannel(updatedCurrentChannel || null);
+      }
+      
+      return updatedChannels;
+    });
+
     if (currentChannel?.id !== channelId) {
       setUnreadChannels(prev => new Set(prev).add(channelId));
       
-      // If message mentions current user
       if (message.content.includes(`@${mockCurrentUser.username}`)) {
         addMention(channelId);
       }
@@ -66,19 +87,22 @@ export const ChannelProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleChannelSelect = (channel: Channel) => {
-    setCurrentChannel(channel);
+    // Find the updated channel from the channels state
+    const updatedChannel = channels.find(c => c.id === channel.id) || channel;
+    setCurrentChannel(updatedChannel);
     markChannelAsRead(channel.id);
   };
 
   const contextValue = useMemo(() => ({
     currentChannel,
+    channels,
     unreadChannels,
     mentionCounts,
     setCurrentChannel: handleChannelSelect,
     markChannelAsRead,
     addMessage,
     addMention,
-  }), [currentChannel, unreadChannels, mentionCounts]);
+  }), [currentChannel, channels, unreadChannels, mentionCounts]);
 
   return (
     <ChannelContext.Provider value={contextValue}>

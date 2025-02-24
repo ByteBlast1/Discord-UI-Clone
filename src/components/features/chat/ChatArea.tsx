@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Message } from '@/types/common';
 import { mockCurrentUser } from '@/config/mockData';
 import { formatDistanceToNow } from 'date-fns';
@@ -12,12 +12,22 @@ export const ChatArea = () => {
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
+  
+  const messages = currentChannel?.messages || [];
+  
   const virtualizer = useVirtualizer({
-    count: currentChannel?.messages.length || 0,
+    count: messages.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 80,
     overscan: 5
   });
+
+  // Auto scroll to bottom when new messages are added
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +74,7 @@ export const ChatArea = () => {
                 transform: `translateY(${virtualRow.start}px)`,
               }}
             >
-              <MessageItem message={currentChannel!.messages[virtualRow.index]} />
+              <MessageItem message={messages[virtualRow.index]} />
             </div>
           ))}
         </div>
