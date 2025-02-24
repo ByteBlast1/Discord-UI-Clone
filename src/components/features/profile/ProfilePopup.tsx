@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, BadgeType } from '@/types/common';
-import { FaDiscord, FaGithub, FaTwitter } from 'react-icons/fa';
+import { User } from '@/types/common';
 import { 
   FiCircle, 
   FiMoon, 
@@ -11,8 +10,6 @@ import {
   FiUser,
   FiLogOut,
 } from 'react-icons/fi';
-import { getBadgeIcon } from '@/lib/badges';
-import { LoadingAnimation } from '@/components/common/LoadingAnimation';
 import clsx from 'clsx';
 
 interface ProfilePopupProps {
@@ -43,7 +40,6 @@ const ProfileSkeleton = () => (
 );
 
 export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupProps) => {
-  const [activeTab, setActiveTab] = useState<'user' | 'mutual'>('user');
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const isMobile = window.innerWidth < 768; // Simple mobile detection
@@ -146,7 +142,7 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
                             className="w-6 h-6 bg-[#18191c] rounded-full flex items-center justify-center"
                             title={badge}
                           >
-                            {getBadgeIcon(badge)}
+                            {/* getBadgeIcon(badge) */}
                           </div>
                         ))}
                       </div>

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FiPaperclip, FiGift, FiImage, FiSmile } from 'react-icons/fi';
+// import { useState } from 'react';
+import { FiPaperclip, FiImage, FiSmile } from 'react-icons/fi';
 
 interface MessageInputProps {
   value: string;
@@ -14,8 +14,6 @@ export const MessageInput = ({
   onSubmit,
   channelName,
 }: MessageInputProps) => {
-  const [isComposing, setIsComposing] = useState(false);
-
   return (
     <form onSubmit={onSubmit} className="relative">
       <div className="flex items-center bg-[#40444b] rounded-lg px-2 md:px-4">
@@ -32,8 +30,6 @@ export const MessageInput = ({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          onCompositionStart={() => setIsComposing(true)}
-          onCompositionEnd={() => setIsComposing(false)}
           className="flex-1 bg-transparent py-2.5 px-2 md:px-3 text-sm md:text-base text-gray-200 placeholder-gray-400 focus:outline-none"
           placeholder={`Message #${channelName}`}
         />

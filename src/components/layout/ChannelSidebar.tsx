@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { DISCORD_CONSTANTS } from '@/config/constants';
-import { Channel } from '@/types/common';
 import { mockServers, mockCurrentUser } from '@/config/mockData';
 import { ProfilePopup } from '@/components/features/profile/ProfilePopup';
 import { ChannelGroup } from '@/components/features/channels/ChannelGroup';

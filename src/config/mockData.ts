@@ -1,4 +1,4 @@
-import { Server, Channel, User, Message } from '@/types/common';
+import { Server, User, Message } from '@/types/common';
 
 export const mockCurrentUser: User = {
   id: '1',

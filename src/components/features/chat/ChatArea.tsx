@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Message } from '@/types/common';
-import { mockCurrentUser, mockMessages } from '@/config/mockData';
+import { mockCurrentUser } from '@/config/mockData';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageInput } from './MessageInput';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useChannel } from '@/contexts/ChannelContext';
 import { useVirtualizer } from '@tanstack/react-virtual';
 

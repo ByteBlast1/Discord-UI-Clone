@@ -1,7 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { ServerSidebar } from './ServerSidebar';
 import { ChannelSidebar } from './ChannelSidebar';
-import { DISCORD_CONSTANTS } from '@/config/constants';
 import { FiMenu } from 'react-icons/fi';
 
 interface MainLayoutProps {

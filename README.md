@@ -31,7 +31,7 @@
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/discord-clone.git
+git clone https://github.com/ByteBlast1/Discord-UI-Clone.git
 ```
 
 2. Install dependencies
