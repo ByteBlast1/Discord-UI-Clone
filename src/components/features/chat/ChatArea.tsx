@@ -5,11 +5,19 @@ import { formatDistanceToNow } from 'date-fns';
 import { MessageInput } from './MessageInput';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useChannel } from '@/contexts/ChannelContext';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 export const ChatArea = () => {
   const { currentChannel, addMessage } = useChannel();
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: currentChannel?.messages.length || 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 80,
+    overscan: 5
+  });
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,13 +44,30 @@ export const ChatArea = () => {
         </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-2 md:px-4 py-6 space-y-4">
-        <AnimatePresence>
-          {currentChannel?.messages.map((message) => (
-            <MessageItem key={message.id} message={message} />
+      {/* Messages Area - Updated with virtualization */}
+      <div ref={parentRef} className="flex-1 overflow-y-auto px-2 md:px-4 py-6">
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {virtualizer.getVirtualItems().map((virtualRow) => (
+            <div
+              key={virtualRow.key}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+            >
+              <MessageItem message={currentChannel!.messages[virtualRow.index]} />
+            </div>
           ))}
-        </AnimatePresence>
+        </div>
         <div ref={messagesEndRef} />
       </div>
 

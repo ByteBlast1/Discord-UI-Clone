@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { Channel, Message } from '@/types/common';
 import { mockServers, mockCurrentUser } from '@/config/mockData';
 
@@ -70,18 +70,18 @@ export const ChannelProvider = ({ children }: { children: ReactNode }) => {
     markChannelAsRead(channel.id);
   };
 
+  const contextValue = useMemo(() => ({
+    currentChannel,
+    unreadChannels,
+    mentionCounts,
+    setCurrentChannel: handleChannelSelect,
+    markChannelAsRead,
+    addMessage,
+    addMention,
+  }), [currentChannel, unreadChannels, mentionCounts]);
+
   return (
-    <ChannelContext.Provider
-      value={{
-        currentChannel,
-        unreadChannels,
-        mentionCounts,
-        setCurrentChannel: handleChannelSelect,
-        markChannelAsRead,
-        addMessage,
-        addMention,
-      }}
-    >
+    <ChannelContext.Provider value={contextValue}>
       {children}
     </ChannelContext.Provider>
   );

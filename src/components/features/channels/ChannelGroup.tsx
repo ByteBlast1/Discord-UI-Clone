@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Channel } from '@/types/common';
 import { FiChevronRight, FiHash, FiVolume2, FiLock } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,7 +12,7 @@ interface ChannelGroupProps {
   selectedChannelId?: string;
 }
 
-export const ChannelGroup = ({ name, channels, onChannelSelect, selectedChannelId }: ChannelGroupProps) => {
+export const ChannelGroup = memo(({ name, channels, onChannelSelect, selectedChannelId }: ChannelGroupProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const { unreadChannels, mentionCounts } = useChannel();
 
@@ -92,4 +92,7 @@ export const ChannelGroup = ({ name, channels, onChannelSelect, selectedChannelI
       </AnimatePresence>
     </div>
   );
-}; 
+});
+
+// Add prop types checking
+ChannelGroup.displayName = 'ChannelGroup'; 

@@ -29,6 +29,19 @@ const statusOptions = [
   { id: 'invisible', label: 'Invisible', icon: FiCircle, color: 'text-gray-500' },
 ];
 
+// Add loading skeleton
+const ProfileSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="h-[60px] bg-gray-700" />
+    <div className="px-4 pb-2">
+      <div className="relative -mt-[30px] mb-3 flex items-end">
+        <div className="w-[70px] h-[70px] rounded-full bg-gray-700" />
+      </div>
+      <div className="h-20 bg-gray-700 rounded-lg" />
+    </div>
+  </div>
+);
+
 export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupProps) => {
   const [activeTab, setActiveTab] = useState<'user' | 'mutual'>('user');
   const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -91,11 +104,7 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
               isMobile ? "w-full rounded-t-xl" : "w-[340px] rounded-lg"
             )}
           >
-            {isLoading ? (
-              <div className="h-[400px] flex items-center justify-center">
-                <LoadingAnimation />
-              </div>
-            ) : (
+            {isLoading ? <ProfileSkeleton /> : (
               <>
                 {/* Header with banner */}
                 <div className="h-[60px] bg-[#5865F2]" />
