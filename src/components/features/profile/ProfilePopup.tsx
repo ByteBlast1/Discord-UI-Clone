@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User } from '@/types/common';
 import { 
@@ -9,6 +9,7 @@ import {
   FiSettings,
   FiUser,
   FiLogOut,
+  FiX
 } from 'react-icons/fi';
 import clsx from 'clsx';
 
@@ -42,7 +43,54 @@ const ProfileSkeleton = () => (
 export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupProps) => {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const isMobile = window.innerWidth < 768; // Simple mobile detection
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const popupRef = useRef<HTMLDivElement>(null);
+
+  const isMobile = windowWidth < 768;
+
+  // Track window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    if (isOpen && !isMobile) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose, isMobile]);
+
+  // Handle escape key press
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+    }
+    
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen) {
@@ -51,13 +99,23 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
       const timer = setTimeout(() => {
         setIsLoading(false);
       }, 1000);
-      return () => clearTimeout(timer);
+
+      // Prevent body scroll on mobile when popup is open
+      if (isMobile) {
+        document.body.classList.add('profile-popup-mobile');
+      }
+      
+      return () => {
+        clearTimeout(timer);
+        document.body.classList.remove('profile-popup-mobile');
+      };
     }
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
 
   // Calculate position based on anchor element and screen size
-  const getPopupPosition = () => {
+  const getPopupPosition = useCallback(() => {
     if (!anchorEl) return {};
+    
     const rect = anchorEl.getBoundingClientRect();
     
     if (isMobile) {
@@ -65,15 +123,27 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
         bottom: '0',
         left: '0',
         right: '0',
-        maxHeight: '90vh',
+        maxHeight: '85vh',  // Slightly reduced to ensure it's not too tall
+        borderBottomLeftRadius: '0',
+        borderBottomRightRadius: '0',
       };
+    }
+
+    let left = rect.left - (340 / 2) + (rect.width / 2);
+    
+    // Prevent popup from going off-screen on the left
+    if (left < 20) left = 20;
+    
+    // Prevent popup from going off-screen on the right
+    if (left + 340 > window.innerWidth - 20) {
+      left = window.innerWidth - 340 - 20;
     }
 
     return {
       bottom: `${window.innerHeight - rect.top + 16}px`,
-      left: `${rect.left - (340 / 2) + (rect.width / 2)}px`,
+      left: `${left}px`,
     };
-  };
+  }, [anchorEl, isMobile]);
 
   return (
     <AnimatePresence>
@@ -84,16 +154,18 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             className="fixed inset-0 z-[60] bg-black/50"
             onClick={onClose}
           />
 
           {/* Popup */}
           <motion.div
+            ref={popupRef}
             initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.95, y: 20 }}
             animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
             exit={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.2 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
             style={getPopupPosition()}
             className={clsx(
               "fixed z-[70] bg-[#232428] shadow-xl overflow-hidden",
@@ -102,8 +174,20 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
           >
             {isLoading ? <ProfileSkeleton /> : (
               <>
+                {/* Close Button (always visible on mobile, only on hover for desktop) */}
+                <button
+                  className={clsx(
+                    "absolute top-3 right-3 text-gray-400 hover:text-white rounded-full p-1 z-10 bg-[#18191c]/80",
+                    isMobile ? "block" : "lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                  )}
+                  onClick={onClose}
+                  aria-label="Close profile popup"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+
                 {/* Header with banner */}
-                <div className="h-[60px] bg-[#5865F2]" />
+                <div className="h-[60px] bg-[#5865F2] group" />
 
                 {/* Profile content */}
                 <div className="px-4 pb-2">
@@ -112,6 +196,7 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
                     <button 
                       className="relative group"
                       onClick={() => setShowStatusMenu(!showStatusMenu)}
+                      aria-label="Change status"
                     >
                       <div className="w-[70px] h-[70px] rounded-full border-4 border-[#232428] overflow-hidden bg-[#18191c]">
                         {user.avatar ? (
@@ -119,6 +204,7 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
                             src={user.avatar}
                             alt={user.username}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-2xl font-semibold text-white">
@@ -169,6 +255,7 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
                         className="mt-2 bg-[#111214] rounded-lg overflow-hidden"
                       >
                         {statusOptions.map((option) => (
@@ -214,18 +301,6 @@ export const ProfilePopup = ({ user, isOpen, onClose, anchorEl }: ProfilePopupPr
                     <FiLogOut className="w-4 h-4" />
                     <span className="text-sm">Log Out</span>
                   </button>
-
-                  {/* Mobile close button */}
-                  {isMobile && (
-                    <button
-                      className="absolute top-3 right-3 text-gray-400 hover:text-white"
-                      onClick={onClose}
-                    >
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
                 </div>
               </>
             )}
